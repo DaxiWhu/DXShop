@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.UserShopExtendMapper">
+    <select id="getShopAllById" resultType="com.daxi.domain.dto.UserShopDTO">
+        select
+             usd.shop_id as shopId,
+             usd.user_id as userId,
+             usd.shop_name as shopName,
+             usd.shop_type as shopType,
+             usd.shop_status as shopStatus,
+             usd.logo_url as logoUrl,
+             usd.create_time as createTime,
+             u.shop_desc as shopDesc,
+             u.business_hours as businessHours,
+             u.contact_phone as contactPhone,
+             u.contact_email as contactEmail,
+             u.address as address
+        from
+        user_shop_display usd
+        inner join user_shop_extend u
+        on usd.shop_id=u.shop_id
+        where usd.shop_id=#{shopId}
+    </select>
+    <select id="getShopAudit" resultType="com.daxi.domain.dto.UserShopDTO">
+        select
+             usd.shop_id as shopId,
+             usd.user_id as userId,
+             usd.shop_name as shopName,
+             usd.shop_type as shopType,
+             usd.shop_status as shopStatus,
+             usd.logo_url as logoUrl,
+             usd.create_time as createTime,
+             u.shop_desc as shopDesc,
+             u.business_hours as businessHours,
+             u.contact_phone as contactPhone,
+             u.contact_email as contactEmail,
+             u.address as address
+        from
+            user_shop_display usd
+            inner join user_shop_extend u
+            on usd.shop_id=u.shop_id
+        where usd.shop_status=2
+        order by usd.create_time desc
+        limit #{startIndex},#{pageSize}
+    </select>
+</mapper>

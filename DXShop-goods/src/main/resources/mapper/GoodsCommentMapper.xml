@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.GoodsCommentMapper">
+    <insert id="sendComment">
+        insert into goods_comment
+        (spu_id,sku_id,sku_dsc,user_id,user_name,user_avatar,order_id,content,score,is_anonymous,pictures,is_repurchase,is_shop_return_customer)
+        values
+        (#{ao.spuId},#{ao.skuId},#{ao.skuDsc},#{ao.userId},#{ao.userName},#{ao.userAvatar},#{ao.orderId},#{ao.content},#{ao.score},#{ao.isAnonymous},#{ao.pictures},#{ao.isRepurchase},#{ao.isShopReturnCustomer})
+    </insert>
+    <select id="getGoodsCommentById" resultType="com.daxi.domain.entity.GoodsComment">
+        SELECT
+            gc.comment_id,
+            gc.spu_id,
+            gc.sku_id,
+            gc.sku_dsc,
+            gc.user_id,
+            gc.user_name,
+            gc.user_avatar,
+            gc.order_id,
+            gc.content,
+            gc.score,
+            gc.is_anonymous,
+            gc.pictures,
+            gc.is_repurchase,
+            gc.is_shop_return_customer,
+            gc.status,
+            gc.created_at,
+            gc.updated_at
+        FROM
+            goods_comment gc
+        WHERE
+            gc.spu_id = #{spuId} and
+            gc.status = 1
+        ORDER BY
+            gc.created_at DESC
+    </select>
+
+
+</mapper>

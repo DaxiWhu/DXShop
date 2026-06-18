@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.order.UserOrderMapper">
+
+    <select id="getDetailOrder" resultType="com.daxi.domain.dto.UserOrderDTO">
+        SELECT
+            uo.order_id,
+            uo.order_sn,
+            uo.user_id,
+            uo.shop_id,
+            uoi.spu_id,
+            uoi.sku_id,
+            uoi.goods_name,
+            uoi.goods_img,
+            uoi.sku_spec,
+            uoi.per_price,
+            uoi.buy_num,
+            uo.price,
+            uo.order_status,
+            uo.operator_status,
+            uo.pay_status,
+            uo.pay_time,
+            uo.pay_sn,
+            uo.create_time,
+            uo.remark,
+            uo.receiver_name,
+            uo.receiver_phone,
+            uo.receiver_address,
+            uo.address_status,
+            uo.logistics_company,
+            uo.logistics_no,
+            uo.send_time,
+            uo.finish_time,
+            uoi.is_comment
+        FROM user_order uo
+        inner join user_order_item uoi on uo.order_id = uoi.order_id
+        WHERE order_id = #{orderId} and user_id=#{userId}
+    </select>
+    <select id="getSimpleOrderByOrderId" resultType="com.daxi.domain.dto.UserSimpleOrderDTO">
+        select
+            uo.order_id,
+            uoi.goods_name,
+            uoi.goods_img,
+            uoi.sku_spec,
+            uoi.per_price AS per_price,
+            uoi.buy_num,
+            uo.price AS pay_amount,
+            uo.order_status AS status
+        from user_order uo
+        inner join user_order_item uoi on uo.order_id = uoi.order_id
+        where uo.order_id = #{orderId}
+    </select>
+    <select id="selectSimpleOrderPage" resultType="com.daxi.domain.dto.UserSimpleOrderDTO">
+        SELECT
+            o.order_id AS orderId,
+            i.goods_name AS goodsName,
+            i.goods_img AS goodsImg,
+            i.sku_spec AS skuSpec,
+            i.per_price AS perPrice,
+            i.buy_num AS buyNum,
+            o.price AS payAmount,
+            o.order_status AS status
+            FROM user_order o
+            INNER JOIN user_order_item i ON o.order_id = i.order_id
+        WHERE o.user_id = #{userId}
+        <if test="status != null and status != -1">
+            AND o.order_status = #{status}
+        </if>
+        ORDER BY o.create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="selectSimpleOrderPageForShop" resultType="com.daxi.domain.dto.UserSimpleOrderDTO">
+        SELECT
+            o.order_id AS orderId,
+            i.goods_name AS goodsName,
+            i.goods_img AS goodsImg,
+            i.sku_spec AS skuSpec,
+            i.per_price AS perPrice,
+            i.buy_num AS buyNum,
+            o.price AS payAmount,
+            o.order_status AS status
+        FROM user_order o
+        INNER JOIN user_order_item i ON o.order_id = i.order_id
+        WHERE o.shop_id = #{shopId}
+        <if test="status != null and status != -1">
+            AND o.order_status = #{status}
+        </if>
+        ORDER BY o.create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="selectSimpleOrderByIds" resultType="com.daxi.domain.dto.UserSimpleOrderDTO">
+        SELECT
+        o.order_id AS orderId,
+        i.goods_name AS goodsName,
+        i.goods_img AS goodsImg,
+        i.sku_spec AS skuSpec,
+        i.per_price AS perPrice,
+        i.buy_num AS buyNum,
+        o.price AS payAmount,
+        o.order_status AS status
+        FROM user_order o
+        INNER JOIN user_order_item i ON o.order_id = i.order_id
+        WHERE o.order_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="countOrderByStatusForUser" resultType="com.daxi.domain.dto.OrderStatusCountDTO">
+        SELECT
+            SUM(CASE WHEN order_status = 0 THEN 1 ELSE 0 END) AS pendingPayment,
+            SUM(CASE WHEN order_status = 1 THEN 1 ELSE 0 END) AS pendingShipment,
+            SUM(CASE WHEN order_status = 2 THEN 1 ELSE 0 END) AS pendingReceipt,
+            SUM(CASE WHEN order_status = 3 THEN 1 ELSE 0 END) AS pendingReview,
+            SUM(CASE WHEN order_status = 4 THEN 1 ELSE 0 END) AS completed,
+            SUM(CASE WHEN order_status = 5 THEN 1 ELSE 0 END) AS cancelled,
+            SUM(CASE WHEN order_status = 6 THEN 1 ELSE 0 END) AS refundAfterSales
+        FROM user_order
+        WHERE user_id = #{userId}
+          AND is_deleted = 0
+    </select>
+    
+    <select id="countOrderByStatusForShop" resultType="com.daxi.domain.dto.OrderStatusCountDTO">
+        SELECT
+            SUM(CASE WHEN order_status = 0 THEN 1 ELSE 0 END) AS pendingPayment,
+            SUM(CASE WHEN order_status = 1 THEN 1 ELSE 0 END) AS pendingShipment,
+            SUM(CASE WHEN order_status = 2 THEN 1 ELSE 0 END) AS pendingReceipt,
+            SUM(CASE WHEN order_status = 3 THEN 1 ELSE 0 END) AS pendingReview,
+            SUM(CASE WHEN order_status = 4 THEN 1 ELSE 0 END) AS completed,
+            SUM(CASE WHEN order_status = 5 THEN 1 ELSE 0 END) AS cancelled,
+            SUM(CASE WHEN order_status = 6 THEN 1 ELSE 0 END) AS refundAfterSales
+        FROM user_order
+        WHERE shop_id = #{shopId}
+          AND is_deleted = 0
+    </select>
+    <select id="getInformationForSendComment" resultType="com.daxi.domain.dto.SendCommentDTO">
+        select
+            uoi.sku_spec
+        from user_order uo
+            inner join user_order_item uoi on uoi.order_id=uo.order_id
+        where uo.order_id = #{orderId}
+          and uo.user_id = #{userId}
+          and uoi.spu_id = #{spuId}
+          and uoi.sku_id = #{skuId}
+    </select>
+</mapper>

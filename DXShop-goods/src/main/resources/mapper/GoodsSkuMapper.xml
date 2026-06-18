@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.GoodsSkuMapper">
+
+    <!-- 1. 根据SKU ID查询单个SKU基础信息 -->
+    <select id="getSkuById" resultType="com.daxi.domain.bo.GoodsSkuBO">
+        SELECT
+            s.sku_id AS skuId,
+            s.spu_id AS spuId,
+            s.price,
+            s.stock,
+            s.bar_code AS barCode,
+            s.sku_spec AS skuSpec,
+            s.status,
+            s.version,
+            s.created_at AS createdAt,
+            s.updated_at AS updatedAt
+        FROM goods_sku s
+        WHERE s.sku_id = #{skuId}
+
+    </select>
+
+    <!-- 2. 根据SPU ID批量查询该商品下所有SKU基础信息 -->
+    <select id="listSkuBySpuId" resultType="com.daxi.domain.bo.GoodsSkuBO$Sku">
+        SELECT
+            s.sku_id AS skuId,
+            s.price AS fen,
+            s.stock,
+            s.sku_spec AS skuSpec
+        FROM goods_sku s
+        WHERE s.spu_id = #{spuId} and s.status=1
+        ORDER BY s.sort DESC
+    </select>
+
+    <!-- 3. 批量查询SKU关联的规格详情 -->
+    <resultMap id="GoodsSkuSpecResultMap" type="com.daxi.domain.bo.GoodsSkuSpecBO">
+
+        <!-- ===================== 【主表：规格名】映射 ===================== -->
+        <id column="spec_name_id" property="specNameId" jdbcType="BIGINT"/>
+        <result column="spec_name" property="specName" jdbcType="VARCHAR"/>
+        <result column="spu_id" property="spuId" jdbcType="BIGINT"/>
+        <result column="sort" property="sort" jdbcType="INTEGER"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+
+        <!-- ===================== 【一对多：规格值列表】嵌套映射 ===================== -->
+        <collection
+                property="specValues"
+                javaType="java.util.List"
+                ofType="com.daxi.domain.bo.GoodsSkuSpecBO$SkuSpecValue"
+                autoMapping="false"
+        >
+            <!-- 规格值的主键 -->
+            <id column="spec_value_id" property="specValueId" jdbcType="VARCHAR"/>
+            <result column="sku_id" property="skuId" jdbcType="BIGINT"/>
+            <result column="spec_name_id_ref" property="specNameId" jdbcType="BIGINT"/>
+            <result column="spec_value" property="specValue" jdbcType="VARCHAR"/>
+            <result column="value_sort" property="sort" jdbcType="INTEGER"/>
+            <result column="value_status" property="status" jdbcType="INTEGER"/>
+            <result column="value_created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+            <result column="value_updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        </collection>
+
+    </resultMap>
+    <select id="listSkuSpecBySkuIds" resultMap="GoodsSkuSpecResultMap">
+        SELECT
+            sn.id AS spec_name_id,
+            sn.spec_name AS spec_name,
+            sv.id AS spec_value_id,
+            ref.sku_id AS sku_id,
+            sv.spec_value AS spec_value,
+            sv.status AS value_status
+        FROM goods_sku_spec_ref ref
+        LEFT JOIN goods_spec_value sv ON ref.spec_value_id = sv.id
+        LEFT JOIN goods_spec_name sn ON sv.spec_id = sn.id
+        WHERE ref.sku_id IN
+        <foreach collection="skuIds" item="skuId" open="(" separator="," close=")">
+            #{skuId}
+        </foreach>
+        ORDER BY sn.sort DESC, sv.sort DESC
+    </select>
+    <select id="listSkuToChangeBySpuId" resultType="com.daxi.domain.bo.GoodsSkuBO$Sku" >
+        SELECT
+            s.sku_id AS skuId,
+            s.price AS fen,
+            s.stock,
+            s.bar_code AS barCode,
+            s.sort AS sort,
+            s.sku_spec AS skuSpec,
+            s.status AS status,
+            s.created_at AS createdAt,
+            s.updated_at AS updatedAt
+        FROM goods_sku s
+        WHERE s.spu_id = #{spuId}
+        ORDER BY s.sort DESC
+    </select>
+    <select id="listSkuSpecToChangeBySkuIds" resultMap="GoodsSkuSpecResultMap">
+        SELECT
+            sn.id AS spec_name_id,
+            sn.spec_name AS spec_name,
+            sn.sort AS sort,
+            sn.create_at AS created_at,
+            sn.updated_at AS updated_at,
+            ref.sku_id AS sku_id,
+            sn.id AS spec_name_id_ref,
+            sv.id AS spec_value_id,
+            sv.spec_value AS spec_value,
+            sv.sort AS value_sort,
+            sv.status AS value_status,
+            sv.create_at AS value_created_at,
+            sv.updated_at AS value_updated_at
+        FROM goods_sku_spec_ref ref
+        LEFT JOIN goods_spec_value sv ON ref.spec_value_id = sv.id
+        LEFT JOIN goods_spec_name sn ON sv.spec_id = sn.id
+        WHERE ref.sku_id IN
+        <foreach collection="skuIds" item="skuId" open="(" separator="," close=")">
+            #{skuId}
+        </foreach>
+        ORDER BY sn.sort DESC, sv.sort DESC
+    </select>
+
+
+
+
+
+
+    <update id="updateSku">
+        update goods_sku
+        set
+            price=case sku_id
+            <foreach collection="list" item="sku">
+                when #{sku.skuId} then #{sku.fen}
+            </foreach>
+                    else price
+            end,
+            stock=case sku_id
+            <foreach collection="list" item="sku">
+                when #{sku.skuId} then #{sku.stock}
+            </foreach>
+                    else stock
+            end,
+            bar_code=case sku_id
+            <foreach collection="list" item="sku">
+                when #{sku.skuId} then #{sku.barCode}
+            </foreach>
+                    else bar_code
+            end,
+            status=case sku_id
+            <foreach collection="list" item="sku">
+                when #{sku.skuId} then #{sku.status}
+            </foreach>
+                    else status
+            end,
+            updated_at = NOW()
+        where sku_id in
+              <foreach collection="list" item="sku" open="(" close=")" separator=",">
+                  #{sku.skuId}
+              </foreach>
+    </update>
+
+    <insert id="insertSku" useGeneratedKeys="true" keyProperty="list.specs.skuId">
+        INSERT INTO goods_sku (
+        spu_id,
+        price,
+        stock,
+        bar_code,
+        sort,
+        sku_spec,
+        status,
+        version,
+        created_at,
+        updated_at
+        )
+        VALUES
+        <foreach collection="list" item="sku" separator="," close=";">
+        (
+        #{spuId},
+        #{sku.fen},
+        #{sku.stock},
+        #{sku.barCode},
+        #{sku.sort},
+        #{sku.skuSpec},
+        #{sku.status},
+        0,
+        NOW(),
+        NOW()
+        )
+        </foreach>
+
+    </insert>
+    <insert id="insertSkuSpecRelation">
+        INSERT INTO goods_sku_spec_ref (sku_id, spec_value_id)
+        VALUES
+        <foreach collection="specs" item="item" separator=",">
+            <foreach collection="item.specIds" item="specId" separator=",">
+                (#{item.skuId}, #{specId})
+            </foreach>
+        </foreach>
+
+    </insert>
+
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.UserGoodsFollowMapper">
+
+    <insert id="insertNewFollow">
+        insert into user_goods_follow(user_id,spu_id) values(#{userId},#{spuId})
+    </insert>
+    <select id="getMyFavoriteGoods" resultType="com.daxi.domain.dto.UserFavoritesSpuDTO">
+        SELECT
+            gs.spu_id AS spuId,
+            gs.title AS title,
+            gs.sub_title AS subTitle,
+            gs.main_img AS mainImg,
+            gs.price AS price,
+            gs.status AS status,
+            ugf.update_time AS followTime
+        FROM
+            user_goods_follow ugf
+                INNER JOIN
+            goods_spu gs ON ugf.spu_id = gs.spu_id
+        WHERE
+            ugf.user_id = #{userId}
+          AND ugf.follow_status = 1
+        ORDER BY
+            ugf.update_time DESC
+    </select>
+</mapper>

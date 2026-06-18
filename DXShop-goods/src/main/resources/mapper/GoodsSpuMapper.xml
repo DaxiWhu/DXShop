@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.GoodsSpuMapper">
+    <insert id="insertSpu" useGeneratedKeys="true" keyProperty="spuId">
+        insert into goods_spu (
+        shop_id,
+        shop_name,
+        category_id,
+        brand,
+        title,
+        sub_title,
+        main_img,
+        price,
+        status,
+        created_at,
+        updated_at
+        ) VALUES (
+        #{ao.shopId},
+        #{ao.shopName},
+        #{ao.categoryId},
+        #{ao.brand},
+        #{ao.title},
+        #{ao.subTitle},
+        #{ao.mainImg},
+        #{ao.fen},
+        #{ao.status},
+        NOW(),
+        NOW()
+        )
+    </insert>
+
+
+
+    <select id="getGoodsToChangeByIds" resultType="com.daxi.domain.bo.GoodsBO">
+        SELECT
+            s.spu_id AS spuId,
+            s.brand AS brandName,
+            s.title,
+            s.sub_title AS subTitle,
+            s.main_img AS mainImg,
+            s.price AS price,
+            s.status,
+            s.updated_at AS updatedAt
+        FROM goods_spu s
+        WHERE s.spu_id IN
+        <foreach collection="spuIds" item="spuId" open="(" close=")" separator=",">
+            #{spuId}
+        </foreach>
+        ORDER BY s.sort DESC
+    </select>
+
+
+    <!-- 查询商品属性 -->
+    <select id="listCategoryAttrsBySpuId" resultType="com.daxi.domain.dto.GoodsCategoryAttrDTO">
+            SELECT
+                cp.param_name AS attrName,
+                gp.param_value AS attrValue
+            FROM goods_param gp
+            inner join  goods_category_param cp ON gp.template_id = cp.param_id
+            WHERE gp.spu_id=#{spuId}
+            order by cp.sort DESC
+    </select>
+    <!-- 批量查询商品属性 -->
+    <select id="listCategoryAttrsBySpuIds" resultType="com.daxi.domain.bo.GoodsCategoryAttrBO">
+          SELECT
+              gp.id AS id,
+              gp.spu_id AS spuId,
+              cp.param_name AS attrName,
+              gp.param_value AS attrValue,
+              cp.sort AS sort
+          FROM goods_param gp
+                   inner join  goods_category_param cp ON gp.template_id = cp.param_id
+          WHERE gp.spu_id IN
+        <foreach collection="spuIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY cp.sort DESC
+    </select>
+
+
+
+    <select id="listImgsBySpuIds" resultType="com.daxi.domain.entity.GoodsImage">
+            select
+                img_id AS imgId,
+                spu_id AS spuId,
+                img_url AS imgUrl,
+                description AS description,
+                sort AS sort,
+                is_main AS isMain
+            from goods_image
+            where spu_id IN
+            <foreach collection="spuIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+            order by sort DESC
+    </select>
+    <select id="listCustomParamsBySpuIds" resultType="com.daxi.domain.entity.GoodsCustomParam">
+            select *
+            from goods_custom_param g
+            where spu_id IN
+            <foreach collection="spuIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+            order by sort desc
+    </select>
+
+    <select id="countAllForUpdate" resultType="java.lang.Long">
+        <!-- 1：图片数量 -->
+        SELECT COUNT(*)
+        FROM goods_image
+        WHERE spu_id = #{spuId}
+
+        UNION ALL
+        <!-- 2：标签数量 -->
+        SELECT COUNT(*)
+        FROM goods_tag_relation
+        WHERE spu_id = #{spuId}
+
+        UNION ALL
+        <!--  3：自定义属性数量 -->
+        SELECT COUNT(*)
+        FROM goods_custom_param
+        WHERE spu_id = #{spuId}
+    </select>
+    <select id="getGoodsSimpleByIds" resultType="com.daxi.domain.dto.GoodsSimpleDTO">
+        SELECT
+        s.spu_id as spuId,
+        s.sub_title AS subTitle,
+        s.main_img AS mainImg,
+        s.price AS price,
+        st.buy_num AS saleCount
+        FROM goods_spu s
+        LEFT JOIN goods_stat st ON s.spu_id = st.spu_id
+        WHERE s.spu_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY s.sort DESC
+    </select>
+    <select id="getDetailGoodsById" resultType="com.daxi.domain.dto.GoodsDetailDTO">
+        SELECT
+            s.spu_id AS spuId,
+            s.shop_id AS shopId,
+            s.shop_name AS shopName,
+            s.category_id AS categoryId,
+            c.category_name AS categoryName,
+            s.brand AS brandName,
+            s.title,
+            s.main_img AS mainImg,
+            s.price,
+            st.collect_num AS collectCount,
+            st.buy_num AS saleCount,
+            st.click_num AS clickCount,
+            st.comment_num AS commentCount,
+            s.status,
+            s.is_hot AS isHot,
+            s.created_at AS createdAt
+        FROM goods_spu s
+             LEFT JOIN goods_category c ON s.category_id = c.category_id
+             LEFT JOIN goods_stat st ON s.spu_id = st.spu_id
+        WHERE s.spu_id =#{id}
+    </select>
+    <select id="getGoodsToChangeByShopId" resultType="com.daxi.domain.dto.GoodsToChangeDTO">
+        select
+            gs.spu_id AS spuId,
+            gs.brand AS brand,
+            gs.title,
+            gs.sub_title AS subTitle,
+            gs.main_img AS mainImg,
+            gs.price AS price,
+            gs.status,
+            gs.created_at AS createdAt,
+            gs.updated_at AS updatedAt
+        from
+            goods_spu gs
+        where gs.shop_id = #{shopId}
+            order by gs.sort DESC
+        limit #{offset},#{pageSize}
+    </select>
+
+
+
+</mapper>

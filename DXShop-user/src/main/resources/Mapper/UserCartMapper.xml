@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.UserCartMapper">
+
+    <insert id="addSkuToCart">
+        INSERT INTO user_cart (
+            user_id,
+            sku_id,
+            spu_id,
+            buy_num,
+            price,
+            sku_name,
+            sku_img,
+            sku_spec
+        ) VALUES (
+                     #{userId},
+                     #{ao.skuId},
+                     #{ao.spuId},
+                     #{ao.buyNum},
+                     #{ao.fen},
+                     #{ao.skuName},
+                     #{ao.skuImg},
+                     #{ao.skuSpec}
+                 )
+            ON DUPLICATE KEY UPDATE
+                                 buy_num = buy_num + #{ao.buyNum},
+                                 price = #{ao.fen},
+                                 sku_name = #{ao.skuName},
+                                 sku_img = #{ao.skuImg},
+                                 sku_spec = #{ao.skuSpec},
+                                 update_time = NOW()
+    </insert>
+</mapper>
+

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.order.UserAddressMapper">
+
+
+    <select id="getAddress" resultType="com.daxi.domain.dto.UserAddressDTO">
+        SELECT
+            address_id AS addressId,
+            receiver_name AS receiverName,
+            receiver_phone AS receiverPhone,
+            province,
+            city,
+            district,
+            detail_address AS detailAddress,
+            is_default AS isDefault,
+            tag
+        FROM user_address
+        where user_id=#{userId}
+        ORDER BY is_default DESC, create_time DESC
+    </select>
+</mapper>

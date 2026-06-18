@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.order.OrderRefundMapper">
+
+    <insert id="insertNewRequest" >
+        INSERT INTO order_refund (
+            refund_no,
+            order_id,
+            user_id,
+            refund_type,
+            refund_amount,
+            refund_reason,
+            evidence_images,
+            status,
+            expire_time
+        ) VALUES (
+            #{request.refundId},
+            #{request.orderId},
+            #{request.userId},
+            #{request.refundType},
+            #{request.refundAmount},
+            #{request.refundReason},
+            #{request.evidenceImages},
+            #{request.status},
+            #{request.expireTime}
+        )
+    </insert>
+
+    <select id="selectRefundRequestsForUser" resultType="com.daxi.domain.dto.RefundRequestSimpleDTO">
+        SELECT
+            id,
+            refund_no,
+            refund_type,
+            refund_amount,
+            refund_reason,
+            status,
+            apply_time,
+            audit_time,
+            refund_time,
+            fail_reason
+        FROM order_refund
+        WHERE user_id = #{userId}
+            AND status = #{status}
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectRefundRequestsForShop" resultType="com.daxi.domain.dto.RefundRequestSimpleDTO">
+        SELECT
+            id,
+            refund_no,
+            refund_type,
+            refund_amount,
+            refund_reason,
+            status,
+            apply_time,
+            audit_time,
+            refund_time,
+            fail_reason
+        FROM order_refund
+        WHERE shop_id = #{shopId}
+          <if test="status != null">
+            AND status = #{status}
+          </if>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectRefundRequestByIds" resultType="com.daxi.domain.dto.RefundRequestSimpleDTO">
+        SELECT
+            id,
+            refund_no,
+            refund_type,
+            refund_amount,
+            refund_reason,
+            status,
+            apply_time,
+            audit_time,
+            refund_time,
+            fail_reason
+        FROM order_refund
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

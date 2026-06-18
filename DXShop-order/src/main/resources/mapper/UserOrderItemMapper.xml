@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.order.UserOrderItemMapper">
+    <insert id="createOrderItem">
+            insert into user_order_item
+                (
+                 order_id,
+                 spu_id,
+                 sku_id,
+                 goods_name,
+                 goods_img,
+                 sku_spec,
+                 per_price,
+                 buy_num)
+            values
+                (
+                 #{order.orderId},
+                 #{order.spuId},
+                 #{order.skuId},
+                 #{order.goodsName},
+                 #{order.goodsImg},
+                 #{order.skuSpec},
+                 #{order.perPrice},
+                 #{order.buyNum})
+    </insert>
+</mapper>

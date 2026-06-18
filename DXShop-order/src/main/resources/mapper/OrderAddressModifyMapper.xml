@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.order.OrderAddressModifyMapper">
+
+    <insert id="createRequest">
+        INSERT INTO order_address_modify (
+            order_id,
+            user_id,
+            shop_id,
+            old_name,
+            old_phone,
+            old_detail,
+            new_name,
+            new_phone,
+            new_detail,
+            status,
+            expire_time
+        ) VALUES (
+            #{address.orderId},
+            #{address.originalReceiverName},
+            #{address.originalReceiverPhone},
+            #{address.originalDetailAddress},
+            #{address.currentReceiverName},
+            #{address.currentReceiverPhone},
+            #{address.currentDetailAddress},
+            1,
+            NOW() + INTERVAL 3 HOUR
+        )
+    </insert>
+
+    <select id="selectAddressModifyRequestsForUser" resultType="com.daxi.domain.dto.AddressModifyRequestDTO">
+        SELECT
+            order_id,
+            user_id,
+            shop_id,
+            old_name,
+            old_phone,
+            old_detail,
+            new_name,
+            new_phone,
+            new_detail,
+            status,
+            expire_time,
+            create_time
+        FROM order_address_modify
+        WHERE user_id = #{userId}
+            AND status = #{status}
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectAddressModifyRequestsForShop" resultType="com.daxi.domain.dto.AddressModifyRequestDTO">
+        SELECT
+            order_id,
+            user_id,
+            shop_id,
+            old_name,
+            old_phone,
+            old_detail,
+            new_name,
+            new_phone,
+            new_detail,
+            status,
+            expire_time,
+            create_time
+        FROM order_address_modify
+        WHERE shop_id = #{shopId}
+            AND status = #{status}
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectAddressModifyRequestByIds" resultType="com.daxi.domain.dto.AddressModifyRequestDTO">
+        SELECT
+            order_id,
+            user_id,
+            shop_id,
+            old_name,
+            old_phone,
+            old_detail,
+            new_name,
+            new_phone,
+            new_detail,
+            status,
+            expire_time,
+            create_time
+        FROM order_address_modify
+        WHERE order_id IN
+        <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+    </select>
+</mapper>

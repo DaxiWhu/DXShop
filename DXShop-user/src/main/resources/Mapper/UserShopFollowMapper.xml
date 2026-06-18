@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daxi.mapper.UserShopFollowMapper">
+
+
+    <select id="getMyFavoritesShops" resultType="com.daxi.domain.dto.UserFavoritesShopDTO">
+        SELECT
+            usd.shop_id AS shopId,
+            usd.shop_name AS shopName,
+            usd.shop_type AS shopType,
+            usd.shop_status AS shopStatus,
+            usd.logo_url AS logoUrl,
+            usd.shop_score AS shopScore,
+            usf.update_time AS followTime
+        FROM
+            user_shop_follow usf
+                INNER JOIN
+            user_shop_display usd ON usf.shop_id = usd.shop_id
+        WHERE
+            usf.user_id = #{userId}
+          AND usf.follow_status = 1
+        ORDER BY
+            usf.update_time DESC
+    </select>
+</mapper>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/DXShop-BOM/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DXShop-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DXShop-goods/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DXShop-goods/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DXShop-order/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DXShop-order/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DXShop-user/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/DXShop-user/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

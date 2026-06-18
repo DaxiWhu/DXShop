@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.daxi.mapper.SpuDailyRepurchaseStatMapper">
+
+    <!-- 查询SPU日复购统计数据 -->
+    <select id="selectSpuRepurchaseData" resultType="com.daxi.domain.bo.SpuRepurchaseDataBO">
+        SELECT
+            spu_id AS spuId,
+            COUNT(DISTINCT CASE WHEN is_valid = 1 THEN user_id END) AS totalBuyUser,
+            COUNT(DISTINCT CASE WHEN is_valid = 1 AND is_first_buy = 1 THEN user_id END) AS firstBuyUser,
+            COUNT(DISTINCT CASE WHEN is_valid = 1 AND is_first_buy = 0 THEN user_id END) AS repurchaseUser,
+            COUNT(CASE WHEN is_valid = 1 THEN 1 END) AS totalOrderCnt,
+            COALESCE(SUM(CASE WHEN is_valid = 1 THEN pay_amount END), 0) AS totalPayAmount
+        FROM user_spu_pay_detail
+        WHERE DATE(pay_time) = #{statDate}
+        GROUP BY spu_id
+    </select>
+
+    <!-- 批量插入或更新（幂等操作） -->
+    <insert id="batchInsertOrUpdate">
+        INSERT INTO spu_daily_repurchase_stat (
+            spu_id, stat_date, total_buy_user, first_buy_user,
+            repurchase_user, repurchase_rate, total_order_cnt,
+            total_pay_amount, create_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.spuId}, #{item.statDate}, #{item.totalBuyUser},
+                #{item.firstBuyUser}, #{item.repurchaseUser},
+                #{item.repurchaseRate}, #{item.totalOrderCnt},
+                #{item.totalPayAmount}, NOW()
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            total_buy_user = VALUES(total_buy_user),
+            first_buy_user = VALUES(first_buy_user),
+            repurchase_user = VALUES(repurchase_user),
+            repurchase_rate = VALUES(repurchase_rate),
+            total_order_cnt = VALUES(total_order_cnt),
+            total_pay_amount = VALUES(total_pay_amount)
+    </insert>
+</mapper>

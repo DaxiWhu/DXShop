@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.daxi.mapper.GoodsParamMapper">
+    <insert id="insertSpuParam">
+        insert into goods_param(spu_id,template_id,param_value)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{spuId},#{item.templateId},#{item.paramValue})
+        </foreach>
+    </insert>
+
+
+</mapper>
