@@ -1,0 +1,27 @@
+﻿# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/workspace.xml
+.idea/claudeCodeTabState.xml
+.idea/httpRequests/
+*.iml
+.ipr
+.iws
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.swp
+*~
