@@ -1,4 +1,4 @@
-﻿# Maven / Java
+# Maven / Java
 target/
 *.class
 *.jar
@@ -6,9 +6,7 @@ target/
 *.ear
 
 # IDE
-.idea/workspace.xml
-.idea/claudeCodeTabState.xml
-.idea/httpRequests/
+.idea/
 *.iml
 .ipr
 .iws
@@ -25,3 +23,4 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+"1.sh" 
