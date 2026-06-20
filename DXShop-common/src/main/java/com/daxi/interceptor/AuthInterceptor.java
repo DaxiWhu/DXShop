@@ -1,6 +1,5 @@
 package com.daxi.interceptor;
 
-import com.daxi.Exception.BusinessException;
 import com.daxi.annotation.AnonymousAccess;
 import com.daxi.annotation.InternalApi;
 import com.daxi.util.JwtUtil;
@@ -15,10 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import static com.daxi.key.redis.UserKey.AGENT_LOGIN;
 import static com.daxi.key.redis.UserKey.LOGIN;
 import static com.daxi.key.redis.UserKey.SHOP_LOGIN;
 import static com.daxi.limit.UserLimit.LOGIN_TOKEN_PREFIX;
-import static com.daxi.response.UserResponse.NOT_LOGIN;
 
 @Slf4j
 @Component
@@ -46,36 +45,35 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return true; // 有注解，直接放行
             }
         }
-
+        boolean uesrLogin=userLogin(request);
+        boolean agentLogin=agentLogin(request);
+        return uesrLogin || agentLogin;
+    }
+    private boolean userLogin(HttpServletRequest request){
         // 3. 以下才是校验 Token 的逻辑（不在白名单的请求才会走到这里）
         String token = request.getHeader("Authorization");
         if (token != null && token.startsWith(LOGIN_TOKEN_PREFIX)) {
             token = token.substring(7);
             try {
+                //获取用户id
                 String userIdStr = JwtUtil.getSubject(token);
-                if(userIdStr== null){
-                    response.setStatus(401);
-                    response.getWriter().write("Unauthorized: Invalid or expired token");
+                if(userIdStr == null) {
                     return false;
                 }
                 Long userId = Long.valueOf(userIdStr);
                 String redisToken = stringRedisTemplate.opsForValue().get(LOGIN.format(userId));
-                if (redisToken == null || !redisToken.equals(token)) {
-                    response.setStatus(401);
-                    response.getWriter().write("Unauthorized: Invalid or expired token");
+                if(redisToken == null || !redisToken.equals(token)){
                     return false;
                 }
                 // 存入 ThreadLocal
                 UserUtil.setLocalUserId(userId);
-                //再看一下有没有shopId
+                //看一下有没有shopId
                 String shopToken= request.getHeader("shop");
                 if(shopToken != null && shopToken.startsWith(LOGIN_TOKEN_PREFIX)){
                     shopToken = shopToken.substring(7);
                     String shopIdStr = null;
 
-                    if(!JwtUtil.isTokenExpired(shopToken)){
-                        shopIdStr = JwtUtil.getSubject(shopToken);
-                    }
+                    shopIdStr = JwtUtil.getSubject(shopToken);
 
                     if(shopIdStr != null){
                         String shopTokenInRedis = stringRedisTemplate.opsForValue().get(SHOP_LOGIN.format(userId));
@@ -84,15 +82,36 @@ public class AuthInterceptor implements HandlerInterceptor {
                         }
                     }
                 }
+
                 return true;
             } catch (Exception e) {
-                throw new BusinessException(NOT_LOGIN);
+                return false;
             }
         }
-
-        throw new BusinessException(NOT_LOGIN);
+        return true;
     }
+    private boolean agentLogin(HttpServletRequest request){
+        //看看有没有agentId
+        String agentToken = request.getHeader("agent");
+        if(agentToken != null && agentToken.startsWith(LOGIN_TOKEN_PREFIX)){
+            agentToken = agentToken.substring(7);
+            String agentIdStr = null;
 
+            try {
+                agentIdStr = JwtUtil.getSubject(agentToken);
+                if(agentIdStr != null){
+                    String agentTokenInRedis = stringRedisTemplate
+                            .opsForValue().get(AGENT_LOGIN.format(agentIdStr));
+                    if(agentTokenInRedis != null && agentTokenInRedis.equals(agentToken)) {
+                        UserUtil.setAgentId(Long.valueOf(agentIdStr));
+                    }
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return true;
+    }
     @Override
     public void afterCompletion(
             @NonNull HttpServletRequest request,

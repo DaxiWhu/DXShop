@@ -14,6 +14,8 @@ public enum UserKey {
 
     SHOP_LOGIN("shop:login:%s", "商家登录信息"),
 
+    AGENT_LOGIN("agent:login:%s", "客服登录信息"),
+
     /** 短信验证码 Key：user:verify:code:{phone} */
     VERIFY_CODE("user:verify:code:%s", "短信验证码"),
 

@@ -4,31 +4,35 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserUtil {
-    private static final ThreadLocal<Long> USER_THREAD_LOCAL = new ThreadLocal<>();
-    private static final ThreadLocal<Long> SHOP_THREAD_LOCAL = new ThreadLocal<>();
+    private static final ThreadLocal<LoginContext> USER_THREAD_LOCAL = new ThreadLocal<>();
     public static void setLocalUserId(Long userId) {
-        USER_THREAD_LOCAL.set(userId);
+        USER_THREAD_LOCAL.get().setUserId(userId);
+    }
+    public static void setLocalShopId(Long shopId) {
+        USER_THREAD_LOCAL.get().setShopId(shopId);
+    }
+    public static void setAgentId(Long agentId) {
+        USER_THREAD_LOCAL.get().setAgentId(agentId);
     }
     public static Long getLocalUserId(){
-        return USER_THREAD_LOCAL.get();
+        return USER_THREAD_LOCAL.get().getUserId();
     }
-
+    public static Long getAgentId(){
+        return USER_THREAD_LOCAL.get().getAgentId();
+    }
     public static Long getLocalShopId(){
-        return SHOP_THREAD_LOCAL.get();
+        return USER_THREAD_LOCAL.get().getShopId();
     }
     public static Long getOrderId(){
-        return USER_THREAD_LOCAL.get();
+        return USER_THREAD_LOCAL.get().getUserId();
     }
     /**
      * 清除当前线程的用户信息（非常重要，必须在拦截器后置处理中调用）
      */
     public static void remove() {
         USER_THREAD_LOCAL.remove();
-        SHOP_THREAD_LOCAL.remove();
     }
 
 
-    public static void setLocalShopId(Long shopId) {
-        SHOP_THREAD_LOCAL.set(shopId);
-    }
+
 }
