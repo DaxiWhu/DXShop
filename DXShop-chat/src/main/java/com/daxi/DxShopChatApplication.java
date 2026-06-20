@@ -1,0 +1,20 @@
+package com.daxi;
+
+import com.daxi.config.WebMvcConfig;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+@ComponentScan(basePackages = "com.daxi",
+        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebMvcConfig.class))
+public class DxShopChatApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DxShopChatApplication.class, args);
+    }
+}
