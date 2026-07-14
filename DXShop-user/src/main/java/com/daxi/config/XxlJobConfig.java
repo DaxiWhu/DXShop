@@ -44,6 +44,11 @@ public class XxlJobConfig {
 
     @Bean
     public XxlJobSpringExecutor xxlJobExecutor() {
+        // 尊重 xxl.job.executor.enabled 开关：禁用时不创建执行器，
+        // 避免测试/无调度中心环境下 Spring 初始化上下文时去连接不存在的 xxl-job admin。
+        if (!Boolean.TRUE.equals(enabled)) {
+            return null;
+        }
         XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
         xxlJobSpringExecutor.setAdminAddresses(adminAddresses);
         xxlJobSpringExecutor.setAccessToken(accessToken);
