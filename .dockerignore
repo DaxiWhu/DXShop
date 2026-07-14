@@ -1,0 +1,16 @@
+# 缩减 docker build 上下文：避免把前端 / node_modules / .git 等大目录传进构建
+DXShop-Front
+.git
+.workbuddy
+.idea
+**/node_modules
+1.sh
+logs
+**/*.log
+
+# 只保留各模块构建好的可执行 jar，其余源码与编译中间产物不进上下文
+**/src
+**/target/classes
+**/target/test-classes
+**/target/generated-sources
+**/target/*.jar.original
