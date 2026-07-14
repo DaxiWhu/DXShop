@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
@@ -107,6 +108,20 @@ public abstract class AbstractIntegrationTest {
         stringRedisTemplate.opsForValue().set(key, token);
         stringRedisTemplate.expire(key, 1, TimeUnit.DAYS);
         return LOGIN_TOKEN_PREFIX + token;
+    }
+
+    /**
+     * 受控响应断言：接口只要返回 200/400/500 即视为“已正确路由并被应用处理”，
+     * 用于冒烟测试——既能确认端点存在（非 404/405），又不会被业务层的 500（数据不存在等）
+     * 或校验层的 400 误判为失败。未处理的连接级错误（如 404）会触发断言失败。
+     */
+    protected static ResultMatcher handled() {
+        return result -> {
+            int status = result.getResponse().getStatus();
+            if (status != 200 && status != 400 && status != 500) {
+                throw new AssertionError("接口未返回受控状态码(200/400/500)，疑似路由或方法错误: " + status);
+            }
+        };
     }
 
     /**
