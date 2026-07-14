@@ -7,17 +7,13 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * UserUtil 特征化单元测试（Characterization Test）。
+ * UserUtil 单元测试。
  *
- * ⚠️ 已知隐患：UserUtil 的 ThreadLocal 使用 new ThreadLocal<>()（无 withInitial），
- * 生产代码里从未 set 过 LoginContext。因此在未初始化的线程上直接调用
- * setLocalUserId / getLocalUserId 会触发 NullPointerException。
- * 这些测试如实记录当前行为，若将来把字段改为
- *   ThreadLocal.withInitial(LoginContext::new)
- * 则 "未初始化即 NPE" 的两个用例需要相应调整。
+ * ThreadLocal 采用 ThreadLocal.withInitial(LoginContext::new) 初始化，
+ * 因此未显式 set 的线程上调用 getLocalUserId() 会安全地返回 null（而不是抛 NPE）。
+ * remove() 之后再次读取同样回到「返回 null」的安全状态。
  */
 @DisplayName("UserUtil 单元测试")
 class UserUtilTest {
@@ -43,11 +39,10 @@ class UserUtilTest {
     }
 
     @Test
-    @DisplayName("[已知隐患] 未初始化时 getLocalUserId 抛 NPE")
-    void getLocalUserId_withoutInit_throwsNpe() {
+    @DisplayName("未初始化时 getLocalUserId 安全返回 null（不抛 NPE）")
+    void getLocalUserId_withoutInit_returnsNull() {
         UserUtil.remove(); // 确保线程本地为空
-        assertThatThrownBy(UserUtil::getLocalUserId)
-                .isInstanceOf(NullPointerException.class);
+        assertThat(UserUtil.getLocalUserId()).isNull();
     }
 
     @Test
@@ -73,7 +68,7 @@ class UserUtilTest {
     }
 
     @Test
-    @DisplayName("remove() 后再次读取回到未初始化的 NPE 状态")
+    @DisplayName("remove() 后再次读取安全地回到 null（不抛 NPE）")
     void remove_clearsContext() throws Exception {
         injectContext(new LoginContext());
         UserUtil.setLocalUserId(1L);
@@ -81,7 +76,6 @@ class UserUtilTest {
 
         UserUtil.remove();
 
-        assertThatThrownBy(UserUtil::getLocalUserId)
-                .isInstanceOf(NullPointerException.class);
+        assertThat(UserUtil.getLocalUserId()).isNull();
     }
 }
