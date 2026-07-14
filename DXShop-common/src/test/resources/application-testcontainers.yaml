@@ -1,5 +1,5 @@
 # 测试 Profile：Docker 真实容器模式（CI 与本地有 Docker 时）
-# datasource / redis 由 TestcontainersConfig 的 @ServiceConnection 运行时注入，不在此写死。
+# datasource / redis 由 AbstractIntegrationTest 的 @DynamicPropertySource 运行时注入，不在此写死。
 # 仍需要关闭注册/配置中心、Seata、XXL-JOB、RocketMQ，使上下文可无外网启动。
 spring:
   data:
@@ -24,6 +24,22 @@ spring:
 seata:
   enabled: false
   enable-auto-data-source-proxy: false
+
+# 阿里云 OSS：测试用占位符。OssUtil 在集成测试中由 @MockBean 隔离，不会真实调用；
+# 但 Spring 建上下文时需先实例化 ossClient bean，故必须提供非空（任意）值，
+# 否则 OssConfig 抛 InvalidCredentialsException: Access key id should not be null or empty。
+aliyun:
+  oss:
+    region: cn-hangzhou
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    bucket-name: dxshop-test
+    access-key-id: test-access-key-id
+    access-key-secret: test-access-key-secret
+    role-arn: ""
+    expire-time: 300
+    temp-url-expire: 300
+    allow-suffix: .jpg,.png
+    max-size: 10485760
 
 xxl:
   job:
