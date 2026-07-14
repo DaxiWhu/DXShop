@@ -1,0 +1,38 @@
+# 测试 Profile：Docker 真实容器模式（CI 与本地有 Docker 时）
+# datasource / redis 由 TestcontainersConfig 的 @ServiceConnection 运行时注入，不在此写死。
+# 仍需要关闭注册/配置中心、Seata、XXL-JOB、RocketMQ，使上下文可无外网启动。
+spring:
+  data:
+    redis:
+      # 容器内 Redis 无密码，显式清空以覆盖 main application.yaml 的 123456
+      password: ""
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    loadbalancer:
+      nacos:
+        enabled: false
+    openfeign:
+      enabled: false
+  autoconfigure:
+    exclude:
+      - org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+
+seata:
+  enabled: false
+  enable-auto-data-source-proxy: false
+
+xxl:
+  job:
+    executor:
+      enabled: false
+
+rocketmq:
+  producer:
+    enabled: false
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml,classpath*:Mapper/*.xml

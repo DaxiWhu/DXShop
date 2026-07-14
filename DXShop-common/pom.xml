@@ -44,7 +44,19 @@
 
     <build>
         <plugins>
-
+            <!-- 生成 test-jar：把公共测试基类/Profile/init.sql 打包供其它模块测试复用 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-test-jar</id>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

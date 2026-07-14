@@ -23,4 +23,21 @@ Thumbs.db
 *.tmp
 *.swp
 *~
-"1.sh" 
+
+# —— 敏感配置：含 DB / Redis / OSS / Nacos 明文密钥，禁止入库（本地保留即可）——
+application*.yaml
+application*.yml
+bootstrap*.yaml
+bootstrap*.yml
+shardingsphere*.yaml
+shardingsphere*.yml
+# 允许提交无密钥的示例模板（供 CI / 他人参考）
+!application-example.yaml
+!application-example.yml
+!**/application-example.yaml
+!**/application-example.yml
+# 允许无密钥的测试模板与容器 profile 入库（CI container 模式必需，二者均不含真实凭据）
+!**/application-test-example.yaml
+!**/src/test/resources/application-testcontainers.yaml
+
+"1.sh"

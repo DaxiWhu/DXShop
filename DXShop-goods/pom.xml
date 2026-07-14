@@ -44,6 +44,14 @@
             <groupId>com.Daxi</groupId>
             <artifactId>DXShop-common</artifactId>
         </dependency>
+        <!-- 复用 common 的公共测试基类/Profile/init.sql -->
+        <dependency>
+            <groupId>com.Daxi</groupId>
+            <artifactId>DXShop-common</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 

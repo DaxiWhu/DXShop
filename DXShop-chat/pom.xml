@@ -2,31 +2,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>com.Daxi</groupId>
         <artifactId>DXShop</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>DXShop-order</artifactId>
-    <name>DXShop-order</name>
-    <description>DXShop-order</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+
+    <artifactId>DXShop-chat</artifactId>
+    <name>DXShop-chat</name>
+
     <properties>
         <java.version>25</java.version>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -36,14 +26,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>com.Daxi</groupId>
             <artifactId>DXShop-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <!-- 复用 common 的公共测试基类/Profile/init.sql -->
         <dependency>
@@ -53,12 +42,9 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
-        <!-- RocketMQ Spring Boot Starter -->
         <dependency>
-            <groupId>org.apache.rocketmq</groupId>
-            <artifactId>rocketmq-spring-boot-starter</artifactId>
-            <version>2.3.6</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
     </dependencies>
 
@@ -70,5 +56,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
