@@ -2,10 +2,16 @@ package com.daxi.config;
 
 import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@ConditionalOnProperty(
+        prefix = "xxl.job.executor",
+        name = "enabled",
+        havingValue = "true"
+)
 public class XxlJobConfig {
 
     @Value("${xxl.job.admin.addresses}")
@@ -16,9 +22,6 @@ public class XxlJobConfig {
 
     @Value("${xxl.job.admin.timeout}")
     private int timeout;
-
-    @Value("${xxl.job.executor.enabled}")
-    private Boolean enabled;
 
     @Value("${xxl.job.executor.appname}")
     private String appname;
@@ -44,16 +47,11 @@ public class XxlJobConfig {
 
     @Bean
     public XxlJobSpringExecutor xxlJobExecutor() {
-        // 尊重 xxl.job.executor.enabled 开关：禁用时不创建执行器，
-        // 避免测试/无调度中心环境下 Spring 初始化上下文时去连接不存在的 xxl-job admin。
-        if (!Boolean.TRUE.equals(enabled)) {
-            return null;
-        }
         XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
         xxlJobSpringExecutor.setAdminAddresses(adminAddresses);
         xxlJobSpringExecutor.setAccessToken(accessToken);
         xxlJobSpringExecutor.setTimeout(timeout);
-        xxlJobSpringExecutor.setEnabled(enabled);
+        xxlJobSpringExecutor.setEnabled(true);
         xxlJobSpringExecutor.setAppname(appname);
         xxlJobSpringExecutor.setAddress(address);
         xxlJobSpringExecutor.setIp(ip);
