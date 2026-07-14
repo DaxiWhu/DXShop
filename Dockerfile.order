@@ -1,0 +1,9 @@
+# DXShop-order 服务镜像
+# 运行时配置(数据源 / Nacos / Redis / RocketMQ / Seata 等)通过环境变量注入,不 bake 进镜像。
+FROM eclipse-temurin:25-jre
+
+WORKDIR /app
+COPY DXShop-order/target/DXShop-order-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 8083
+ENTRYPOINT ["java", "-jar", "app.jar"]
