@@ -95,8 +95,8 @@ public class JwtUtil {
         } catch (ExpiredJwtException e) {
             // 如果捕获到过期异常，说明确实已过期
             return true;
-        } catch (JwtException e) {
-            // 其他异常（如签名错误、格式错误）也视为无效Token
+        } catch (JwtException | IllegalArgumentException e) {
+            // 其他异常（签名错误、格式错误、空/空白字符串）也视为无效Token
             return true;
         }
     }
@@ -111,7 +111,8 @@ public class JwtUtil {
         try {
             parseToken(token);
             return true;
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
+            // 无效Token（签名错误、格式错误、空/空白字符串）
             // 在实际业务中，可以在这里记录日志
             // log.error("Invalid JWT token: {}", e.getMessage());
             return false;
