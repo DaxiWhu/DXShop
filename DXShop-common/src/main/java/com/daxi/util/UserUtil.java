@@ -4,7 +4,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserUtil {
-    private static final ThreadLocal<LoginContext> USER_THREAD_LOCAL = new ThreadLocal<>();
+    private static final ThreadLocal<LoginContext> USER_THREAD_LOCAL =
+            ThreadLocal.withInitial(LoginContext::new);
     public static void setLocalUserId(Long userId) {
         USER_THREAD_LOCAL.get().setUserId(userId);
     }
