@@ -50,5 +50,7 @@ rocketmq:
   producer:
     enabled: false
 
-mybatis-plus:
-  mapper-locations: classpath*:mapper/*.xml,classpath*:Mapper/*.xml
+# 注意：mybatis-plus.mapper-locations 不再在此重复设置。
+# 各模块主 application.yaml 已统一为 classpath:mapper/*.xml（user/chat 的 Mapper 目录已重命名为 mapper）。
+# Spring 对 mybatis-plus.mapper-locations 为“合并”语义，若此处再写一遍会与主配置叠加，
+# 导致同一 Mapper XML 被扫描两遍，触发 MyBatis “Result Maps collection already contains value”而上下文加载失败。

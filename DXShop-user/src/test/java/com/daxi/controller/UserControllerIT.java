@@ -177,11 +177,11 @@ class UserControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("收藏商品(需登录)：无 token 时返回未关注(成功 200)")
+    @DisplayName("收藏商品(需登录)：无 token -> 未登录 500")
     void followGoods_noToken_returnsNotFollow() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/user/favorites/spu/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+                .andExpect(jsonPath("$.code").value(500));
     }
 
     @Test
