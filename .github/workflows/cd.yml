@@ -137,11 +137,12 @@ jobs:
             exit 1
           fi
 
-      - name: Pull images and run via docker compose
+      - name: Run via docker compose (按 pull_policy 拉取)
         run: |
           set -e
           cd /opt/dxshop
-          docker compose pull
+          # 中间件镜像 pull_policy: missing（本地已有则跳过），应用镜像 pull_policy: always（每次拉最新）。
+          # 注意：compose pull 命令不遵守 pull_policy，必须用 up 触发按策略拉取。
           docker compose up -d
           docker image prune -f
           echo "===== 部署后容器状态 ====="
