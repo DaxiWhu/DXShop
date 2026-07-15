@@ -54,7 +54,7 @@ services:
       retries: 12
 
   nacos:
-    image: nacos/nacos:v2.3.2
+    image: nacos/nacos-server:v2.3.2
     container_name: dxshop-nacos
     restart: unless-stopped
     environment:
