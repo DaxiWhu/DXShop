@@ -41,6 +41,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+      start_period: 60s
 
   redis:
     image: redis:7.2
@@ -57,6 +58,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+      start_period: 30s
 
   nacos:
     image: nacos/nacos-server:v2.3.2
@@ -77,7 +79,9 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/health"]
       interval: 10s
       timeout: 5s
-      retries: 15
+      retries: 30
+      # WSL 等资源受限环境下 Nacos(Java)启动慢，给足宽限期，期间失败不计入重试次数
+      start_period: 180s
 
   # 一次性任务：把 Seata 统一配置发布到 Nacos（dataId=seataServer.properties, group=SEATA_GROUP）
   # 成功退出后，seata 与各应用才启动，确保它们能从 Nacos 读到配置。
@@ -134,7 +138,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8091/health"]
       interval: 10s
       timeout: 5s
-      retries: 15
+      retries: 30
+      start_period: 120s
 
   rocketmq-namesrv:
     image: apache/rocketmq:4.9.7
