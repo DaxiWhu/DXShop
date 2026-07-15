@@ -443,4 +443,133 @@ CREATE TABLE `user_shop_follow` (
   KEY `idx_user_id` (`user_id`) COMMENT '快速查用户的关注店铺',
   KEY `idx_spu_id` (`shop_id`) COMMENT '快速查商品的关注人数'
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='淘宝风格-用户关注店铺表';
+
+-- ===================== 订单模块表（补充：原初始化脚本缺少 order 模块，导致集成测试查表报 Table doesn't exist） =====================
+
+CREATE TABLE IF NOT EXISTS `user_order` (
+  `order_id` bigint NOT NULL COMMENT '订单ID（雪花ID，ASSIGN_ID）',
+  `order_sn` varchar(64) DEFAULT NULL COMMENT '订单编号',
+  `user_id` bigint DEFAULT NULL COMMENT '用户ID',
+  `shop_id` bigint DEFAULT NULL COMMENT '店铺ID',
+  `price` decimal(10,2) DEFAULT NULL COMMENT '实付金额',
+  `receiver_name` varchar(100) DEFAULT NULL COMMENT '收货人姓名',
+  `receiver_phone` varchar(20) DEFAULT NULL COMMENT '收货人手机号',
+  `receiver_address` varchar(255) DEFAULT NULL COMMENT '收货地址',
+  `address_status` int DEFAULT NULL COMMENT '地址状态',
+  `logistics_company` varchar(100) DEFAULT NULL COMMENT '物流公司',
+  `logistics_no` varchar(100) DEFAULT NULL COMMENT '运单号',
+  `send_time` datetime DEFAULT NULL COMMENT '发货时间',
+  `finish_time` datetime DEFAULT NULL COMMENT '确认收货时间',
+  `order_status` int DEFAULT NULL COMMENT '订单状态',
+  `operate_status` int DEFAULT NULL COMMENT '操作状态',
+  `pay_status` int DEFAULT NULL COMMENT '支付状态',
+  `pay_time` datetime DEFAULT NULL COMMENT '支付时间',
+  `pay_sn` varchar(100) DEFAULT NULL COMMENT '支付流水号',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `is_deleted` int DEFAULT '0' COMMENT '逻辑删除',
+  `version` int DEFAULT '0' COMMENT '乐观锁',
+  `remark` varchar(500) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户订单表';
+
+CREATE TABLE IF NOT EXISTS `user_order_item` (
+  `order_id` bigint NOT NULL COMMENT '关联订单ID',
+  `spu_id` bigint DEFAULT NULL COMMENT '商品SPU ID',
+  `sku_id` bigint DEFAULT NULL COMMENT '商品SKU ID',
+  `goods_name` varchar(255) DEFAULT NULL COMMENT '商品名称快照',
+  `goods_img` varchar(255) DEFAULT NULL COMMENT '商品主图',
+  `sku_spec` varchar(255) DEFAULT NULL COMMENT '规格',
+  `per_price` decimal(10,2) DEFAULT NULL COMMENT '单价',
+  `buy_num` int DEFAULT NULL COMMENT '购买数量',
+  `is_comment` int DEFAULT '0' COMMENT '是否评价',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `is_deleted` int DEFAULT '0' COMMENT '逻辑删除',
+  PRIMARY KEY (`order_id`,`spu_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单明细表';
+
+CREATE TABLE IF NOT EXISTS `user_address` (
+  `address_id` bigint NOT NULL AUTO_INCREMENT COMMENT '地址主键ID',
+  `user_id` bigint DEFAULT NULL COMMENT '所属用户ID',
+  `receiver_name` varchar(100) DEFAULT NULL COMMENT '收货人姓名',
+  `receiver_phone` varchar(20) DEFAULT NULL COMMENT '收货人手机号',
+  `province` varchar(50) DEFAULT NULL COMMENT '省份',
+  `city` varchar(50) DEFAULT NULL COMMENT '城市',
+  `district` varchar(50) DEFAULT NULL COMMENT '区/县',
+  `detail_address` varchar(255) DEFAULT NULL COMMENT '详细地址',
+  `is_default` int DEFAULT '0' COMMENT '1=默认 0=普通',
+  `tag` varchar(20) DEFAULT NULL COMMENT '地址标签',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`address_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户收货地址表';
+
+CREATE TABLE IF NOT EXISTS `order_refund` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `refund_no` varchar(64) DEFAULT NULL COMMENT '退款单号',
+  `order_id` bigint DEFAULT NULL COMMENT '订单ID',
+  `user_id` bigint DEFAULT NULL COMMENT '用户ID',
+  `shop_id` bigint DEFAULT NULL COMMENT '店铺ID',
+  `refund_type` int DEFAULT NULL COMMENT '1-仅退款 2-退货退款',
+  `refund_amount` decimal(10,2) DEFAULT NULL COMMENT '退款金额',
+  `refund_reason` varchar(500) DEFAULT NULL COMMENT '退款原因',
+  `evidence_images` varchar(1000) DEFAULT NULL COMMENT '凭证图片',
+  `status` int DEFAULT NULL COMMENT '退款状态',
+  `apply_time` datetime DEFAULT NULL COMMENT '申请时间',
+  `audit_time` datetime DEFAULT NULL COMMENT '审核时间',
+  `expire_time` datetime DEFAULT NULL COMMENT '过期时间',
+  `return_waybill` varchar(100) DEFAULT NULL COMMENT '退货运单号',
+  `return_express_company` varchar(100) DEFAULT NULL COMMENT '退货快递公司',
+  `receive_time` datetime DEFAULT NULL COMMENT '收货时间',
+  `refund_channel` varchar(50) DEFAULT NULL COMMENT '退款渠道',
+  `refund_no_channel` varchar(100) DEFAULT NULL COMMENT '渠道退款单号',
+  `refund_time` datetime DEFAULT NULL COMMENT '退款时间',
+  `fail_reason` varchar(500) DEFAULT NULL COMMENT '失败原因',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单退款表';
+
+CREATE TABLE IF NOT EXISTS `order_address_modify` (
+  `order_id` bigint NOT NULL COMMENT '订单号主键',
+  `user_id` bigint DEFAULT NULL COMMENT '用户ID',
+  `shop_id` bigint DEFAULT NULL COMMENT '店铺ID',
+  `old_name` varchar(100) DEFAULT NULL COMMENT '原收货人姓名',
+  `old_phone` varchar(20) DEFAULT NULL COMMENT '原收货人手机号',
+  `old_detail` varchar(255) DEFAULT NULL COMMENT '原详细地址',
+  `new_name` varchar(100) DEFAULT NULL COMMENT '新收货人姓名',
+  `new_phone` varchar(20) DEFAULT NULL COMMENT '新收货人手机号',
+  `new_detail` varchar(255) DEFAULT NULL COMMENT '新详细地址',
+  `status` int DEFAULT NULL COMMENT '状态',
+  `expire_time` datetime DEFAULT NULL COMMENT '申请过期时间',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='订单地址修改申请表';
+
+CREATE TABLE IF NOT EXISTS `mq_dead_letter_message` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `msg_id` VARCHAR(64) NOT NULL COMMENT '消息ID',
+  `topic` VARCHAR(128) NOT NULL COMMENT 'Topic名称',
+  `tag` VARCHAR(64) DEFAULT NULL COMMENT 'Tag标签',
+  `consumer_group` VARCHAR(128) NOT NULL COMMENT '消费者组',
+  `business_key` VARCHAR(128) DEFAULT NULL COMMENT '业务键（订单号/退款ID等）',
+  `message_body` TEXT COMMENT '消息体内容',
+  `retry_count` INT DEFAULT 0 COMMENT '重试次数',
+  `error_message` TEXT COMMENT '错误信息',
+  `business_type` VARCHAR(64) NOT NULL COMMENT '业务类型：ORDER_TIMEOUT-订单超时, REFUND_TIMEOUT-退款超时, ADDRESS_MODIFY-地址修改超时',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '处理状态：0-待处理, 1-已处理, 2-忽略',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `handler` VARCHAR(64) DEFAULT NULL COMMENT '处理人',
+  `handle_time` DATETIME DEFAULT NULL COMMENT '处理时间',
+  `handle_remark` TEXT COMMENT '处理备注',
+  PRIMARY KEY (`id`),
+  KEY `idx_msg_id` (`msg_id`) COMMENT '消息ID索引',
+  KEY `idx_business_key` (`business_key`) COMMENT '业务键索引',
+  KEY `idx_status` (`status`) COMMENT '状态索引',
+  KEY `idx_create_time` (`create_time`) COMMENT '创建时间索引',
+  KEY `idx_business_type` (`business_type`) COMMENT '业务类型索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='MQ死信消息记录表';
 /*!40101 SET character_set_client = @saved_cs_client */;
