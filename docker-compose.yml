@@ -12,7 +12,7 @@
 #     (mysql / redis / nacos / seata / rocketmq-namesrv)，由 Docker 内部 DNS 解析。
 #   - 敏感值（密码、OSS 密钥）用 ${...} 从同目录 .env 读取，绝不入库。
 #   - 镜像来自 GHCR:  ghcr.io/<REGISTRY_OWNER>/dxshop-*:latest
-  - 镜像拉取策略: 中间件(mysql/redis/nacos/seata/rocketmq)设 pull_policy: missing(本地已有同 tag 镜像则跳过拉取,避免重复部署反复拉大镜像碰国内网络 EOF); 4 个应用镜像设 pull_policy: always(每次拉最新构建)。部署用 docker compose up -d(而非 compose pull),由 up 按各服务策略拉取。
+#   - 镜像拉取策略: 中间件(mysql/redis/nacos/seata/rocketmq)设 pull_policy: missing(本地已有同 tag 镜像则跳过拉取,避免重复部署反复拉大镜像碰国内网络 EOF); 4 个应用镜像设 pull_policy: always(每次拉最新构建)。部署用 docker compose up -d(而非 compose pull),由 up 按各服务策略拉取。
 
 services:
   mysql:
