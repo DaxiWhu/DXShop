@@ -32,6 +32,9 @@ jobs:
           java-version: "25"
           cache: maven
 
+      - name: 赋予 Maven Wrapper 执行权限
+        run: chmod +x ./mvnw
+
       - name: Build all service jars
         run: ./mvnw -B package -DskipTests
 
@@ -88,3 +91,39 @@ jobs:
           tags: |
             ghcr.io/${{ env.OWNER }}/dxshop-chat:latest
             ghcr.io/${{ env.OWNER }}/dxshop-chat:sha-${{ github.sha }}
+
+  deploy:
+    name: Deploy to single Linux server
+    needs: build-and-push
+    # 与 build-and-push 相同门槛：手动触发始终跑；workflow_run 仅在 CI 成功且 master 时跑
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy compose file to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          source: "docker-compose.yml"
+          target: "/opt/dxshop"
+
+      - name: Pull images and run via docker compose
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          script: |
+            cd /opt/dxshop
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
