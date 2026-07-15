@@ -95,11 +95,13 @@ jobs:
   deploy:
     name: Deploy to single Linux server
     needs: build-and-push
-    # 与 build-and-push 相同门槛：手动触发始终跑；workflow_run 仅在 CI 成功且 master 时跑
+    # 与 build-and-push 相同门槛：手动触发始终跑；workflow_run 仅在 CI 成功且 master 时跑。
+    # 额外守卫：必须已配置 DEPLOY_SSH_KEY 才执行部署，否则整体跳过（避免 Secrets 未配时 CD 直接红）。
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'master')
+      ((github.event_name == 'workflow_dispatch' ||
+        (github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.head_branch == 'master')) &&
+       secrets.DEPLOY_SSH_KEY != '')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
