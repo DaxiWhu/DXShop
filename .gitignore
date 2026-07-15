@@ -40,4 +40,12 @@ shardingsphere*.yml
 !**/application-test-example.yaml
 !**/src/test/resources/application-testcontainers.yaml
 
-"1.sh"
+# —— 环境变量文件：含真实密钥，禁止入库（服务器/本地手动放置，仅 .example 模板可提交）——
+.env
+.env.*
+!.env.example
+
+# —— 本地临时脚本 / AI 记忆 / 前端（按需决定是否纳入版本库）——
+1.sh
+.workbuddy/
+DXShop-Front/
