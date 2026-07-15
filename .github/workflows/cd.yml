@@ -107,14 +107,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy compose file to server
+      - name: Copy compose file and deploy assets to server
         uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || '22' }}
-          source: "docker-compose.yml"
+          # deploy/ 下含 seata 配置与 push 脚本、mysql 初始化 SQL，compose 会挂载它们，必须一并上传
+          source: "docker-compose.yml,deploy/**"
           target: "/opt/dxshop"
 
       - name: Pull images and run via docker compose
