@@ -11,8 +11,8 @@
 #   - 原开发配置写死 172.17.156.101，这里统一改为 compose 服务名
 #     (mysql / redis / nacos / seata / rocketmq-namesrv)，由 Docker 内部 DNS 解析。
 #   - 敏感值（密码、OSS 密钥）用 ${...} 从同目录 .env 读取，绝不入库。
-#   - 镜像来自 GHCR:  ghcr.io/<REGISTRY_OWNER>/dxshop-*:latest
-#   - 镜像拉取策略: 中间件(mysql/redis/nacos/seata/rocketmq)设 pull_policy: missing(本地已有同 tag 镜像则跳过拉取,避免重复部署反复拉大镜像碰国内网络 EOF); 4 个应用镜像设 pull_policy: always(每次拉最新构建)。部署用 docker compose up -d(而非 compose pull),由 up 按各服务策略拉取。
+#   - 镜像为本地构建: dxshop-user/order/goods/chat:latest（由 Jenkins 在本机 docker build 生成，不依赖 GHCR，规避内网拉镜像的代理/网络问题）。
+#   - 镜像拉取策略: 全部设 pull_policy: missing(本地已有同 tag 镜像则跳过拉取,避免重复部署反复拉大镜像); 4 个应用镜像由 Jenkins 本地构建后直接复用，中间件(mysql/redis/nacos/seata/rocketmq)首次会从 Docker Hub 拉取一次。部署用 docker compose up -d,由 up 按各服务策略处理。
 
 services:
   mysql:
@@ -170,8 +170,8 @@ services:
         condition: service_started
 
   dxshop-user:
-    image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-user:latest
-    pull_policy: always
+    image: dxshop-user:latest
+    pull_policy: missing
     container_name: dxshop-user
     restart: unless-stopped
     ports:
@@ -217,8 +217,8 @@ services:
         condition: service_healthy
 
   dxshop-order:
-    image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-order:latest
-    pull_policy: always
+    image: dxshop-order:latest
+    pull_policy: missing
     container_name: dxshop-order
     restart: unless-stopped
     ports:
@@ -262,8 +262,8 @@ services:
         condition: service_started
 
   dxshop-goods:
-    image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-goods:latest
-    pull_policy: always
+    image: dxshop-goods:latest
+    pull_policy: missing
     container_name: dxshop-goods
     restart: unless-stopped
     ports:
@@ -309,8 +309,8 @@ services:
         condition: service_healthy
 
   dxshop-chat:
-    image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-chat:latest
-    pull_policy: always
+    image: dxshop-chat:latest
+    pull_policy: missing
     container_name: dxshop-chat
     restart: unless-stopped
     ports:

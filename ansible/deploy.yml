@@ -1,0 +1,72 @@
+---
+# DXShop 部署 Playbook
+#
+# 由 Jenkins 调用:
+#   ansible-playbook -i inventory.ini deploy.yml --extra-vars "image_tag=<commit短哈希>"
+#
+# 前提（目标机，默认 localhost = 运行 Jenkins 的机器）:
+#   1. 已安装 Docker + docker compose 插件，且 Jenkins 运行用户已加入 docker 组（免 sudo）
+#   2. 本机已由 Jenkins 构建好 dxshop-user/order/goods/chat:latest 镜像
+#   3. /opt/dxshop/.env 已存在并填入真实值（不存在则本 playbook 直接失败）
+#
+# 扩展：要部署到局域网其它机器，在 inventory.ini [dxshop] 增加主机（需先 ssh-copy-id），
+#       并改用镜像仓库（把 Jenkins 构建的镜像 push 到仓库、compose 引用仓库地址）。
+
+- name: Deploy DXShop via Docker Compose
+  hosts: dxshop
+  gather_facts: false
+
+  vars:
+    deploy_dir: /opt/dxshop
+    image_tag: "latest"
+
+  tasks:
+    - name: 确保部署目录存在
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: 同步 docker-compose.yml 到目标机
+      copy:
+        src: "{{ playbook_dir }}/../docker-compose.yml"
+        dest: "{{ deploy_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: 同步 deploy/（mysql-init、seata 配置）到目标机
+      copy:
+        src: "{{ playbook_dir }}/../deploy"
+        dest: "{{ deploy_dir }}/"
+        mode: '0644'
+
+    - name: 检查 /opt/dxshop/.env 是否存在
+      stat:
+        path: "{{ deploy_dir }}/.env"
+      register: env_file
+
+    - name: 若 .env 缺失则失败并提示
+      fail:
+        msg: >-
+          {{ deploy_dir }}/.env 不存在！请在目标机执行：
+          cp {{ deploy_dir }}/.env.example {{ deploy_dir }}/.env
+          并填入真实值（MYSQL_ROOT_PASSWORD / REDIS_PASSWORD / NACOS_AUTH_TOKEN / ALIYUN_OSS_*），再重新运行部署。
+      when: not env_file.stat.exists
+
+    - name: 启动 / 更新所有服务（应用用本地镜像，中间件按 pull_policy:missing 处理）
+      command: "docker compose -f {{ deploy_dir }}/docker-compose.yml up -d"
+      args:
+        chdir: "{{ deploy_dir }}"
+
+    - name: 等待所有服务就绪（无 unhealthy / exited）
+      command: "docker compose -f {{ deploy_dir }}/docker-compose.yml ps"
+      args:
+        chdir: "{{ deploy_dir }}"
+      register: ps_out
+      until: (ps_out.stdout | regex_search('unhealthy|exited')) is none
+      retries: 30
+      delay: 10
+      changed_when: false
+
+    - name: 输出容器状态
+      debug:
+        msg: "{{ ps_out.stdout }}"

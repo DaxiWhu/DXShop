@@ -1,3 +1,15 @@
+# =============================================================
+# 已废弃（legacy）—— 由 Jenkins + Ansible 方案取代
+# -------------------------------------------------------------
+# 本文件原是 GitHub Actions 的「构建+推送 GHCR+部署」流水线。
+# 2026-07-15 起，DXShop 的 CI/CD 改为 Jenkins（本机构建测试）
+# + Ansible（SSH 部署）方案（见仓库根目录 Jenkinsfile 与
+# ansible/ 目录，以及 deploy/JENKINS-ANSIBLE.md）。
+# 新方案的镜像在 Jenkins 本机本地构建（dxshop-*:latest），
+# 不再经过 GHCR，因此本文件已与新 docker-compose.yml 不一致。
+# 如需恢复，可 git mv 回 .github/workflows/cd.yml。
+# =============================================================
+
 name: CD
 
 # 触发:CI 工作流在 master 上成功完成后自动跑;也支持手动触发。
