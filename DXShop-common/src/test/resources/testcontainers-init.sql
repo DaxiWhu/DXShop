@@ -475,7 +475,7 @@ CREATE TABLE IF NOT EXISTS `user_order` (
 
 CREATE TABLE IF NOT EXISTS `user_order_item` (
   `order_id` bigint NOT NULL COMMENT '关联订单ID',
-  `spu_id` bigint DEFAULT NULL COMMENT '商品SPU ID',
+  `spu_id` bigint NOT NULL COMMENT '商品SPU ID',
   `sku_id` bigint DEFAULT NULL COMMENT '商品SKU ID',
   `goods_name` varchar(255) DEFAULT NULL COMMENT '商品名称快照',
   `goods_img` varchar(255) DEFAULT NULL COMMENT '商品主图',
