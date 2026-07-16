@@ -2,6 +2,9 @@
 # datasource / redis 由 AbstractIntegrationTest 的 @DynamicPropertySource 运行时注入，不在此写死。
 # 仍需要关闭注册/配置中心、Seata、XXL-JOB、RocketMQ，使上下文可无外网启动。
 spring:
+  # 测试环境不连 Nacos 配置中心：用 optional 声明导入，避免 “No spring.config.import” 启动失败
+  config:
+    import: optional:nacos:
   data:
     redis:
       # 容器内 Redis 无密码，显式清空以覆盖 main application.yaml 的 123456
@@ -12,6 +15,9 @@ spring:
         enabled: false
       config:
         enabled: false
+        # 双保险：显式关闭 import-check 校验（主 application.yaml 的同名配置在测试 profile 下未生效）
+        import-check:
+          enabled: false
     loadbalancer:
       nacos:
         enabled: false

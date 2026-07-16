@@ -40,7 +40,7 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                sh './mvnw -B -ntp clean verify'
+                sh './mvnw -B -ntp clean verify -Ddxshop.test.backend=container'
             }
         }
 
