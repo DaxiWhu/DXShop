@@ -12,7 +12,7 @@
 #     (mysql / redis / nacos / seata / rocketmq-namesrv)，由 Docker 内部 DNS 解析。
 #   - 敏感值（密码、OSS 密钥）用 ${...} 从同目录 .env 读取，绝不入库。
 #   - 镜像来自 GHCR:  ghcr.io/<REGISTRY_OWNER>/dxshop-*:latest
-#   - 镜像拉取策略: 中间件(mysql/redis/nacos/seata/rocketmq)设 pull_policy: missing(本地已有同 tag 镜像则跳过拉取,避免重复部署反复拉大镜像碰国内网络 EOF); 4 个应用镜像设 pull_policy: always(每次拉最新构建)。部署用 docker compose up -d(而非 compose pull),由 up 按各服务策略拉取。
+#   - 镜像拉取策略: 所有服务均设 pull_policy: missing —— 本机 docker build 已产出同名镜像则直接用,不回 ghcr 拉取(绕开国内连 ghcr.io 超时)。若某镜像本地不存在才会回 ghcr 拉(适用于能连 ghcr 的其它机器)。
 
 services:
   mysql:
@@ -171,7 +171,7 @@ services:
 
   dxshop-user:
     image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-user:latest
-    pull_policy: always
+    pull_policy: missing
     container_name: dxshop-user
     restart: unless-stopped
     ports:
@@ -218,7 +218,7 @@ services:
 
   dxshop-order:
     image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-order:latest
-    pull_policy: always
+    pull_policy: missing
     container_name: dxshop-order
     restart: unless-stopped
     ports:
@@ -263,7 +263,7 @@ services:
 
   dxshop-goods:
     image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-goods:latest
-    pull_policy: always
+    pull_policy: missing
     container_name: dxshop-goods
     restart: unless-stopped
     ports:
@@ -310,7 +310,7 @@ services:
 
   dxshop-chat:
     image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-chat:latest
-    pull_policy: always
+    pull_policy: missing
     container_name: dxshop-chat
     restart: unless-stopped
     ports:
@@ -359,7 +359,7 @@ services:
   # 镜像由 Dockerfile.front 构建；宿主机 8080 -> 容器 80
   dxshop-front:
     image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-front:latest
-    pull_policy: always
+    pull_policy: missing
     container_name: dxshop-front
     restart: unless-stopped
     ports:
