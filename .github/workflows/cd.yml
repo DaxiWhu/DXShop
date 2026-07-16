@@ -24,6 +24,7 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'master')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,68 +47,34 @@ jobs:
       - name: Lowercase registry owner
         run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry (retry)
+        run: |
+          for i in 1 2 3; do
+            if echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin; then
+              echo "ghcr.io login ok"; break
+            fi
+            echo "ghcr.io login attempt $i failed, retrying in 15s..."; sleep 15
+          done
 
-      - name: Build & push dxshop-user
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.user
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ env.OWNER }}/dxshop-user:latest
-            ghcr.io/${{ env.OWNER }}/dxshop-user:sha-${{ github.sha }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build & push dxshop-order
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.order
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ env.OWNER }}/dxshop-order:latest
-            ghcr.io/${{ env.OWNER }}/dxshop-order:sha-${{ github.sha }}
-
-      - name: Build & push dxshop-goods
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.goods
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ env.OWNER }}/dxshop-goods:latest
-            ghcr.io/${{ env.OWNER }}/dxshop-goods:sha-${{ github.sha }}
-
-      - name: Build & push dxshop-chat
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.chat
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ env.OWNER }}/dxshop-chat:latest
-            ghcr.io/${{ env.OWNER }}/dxshop-chat:sha-${{ github.sha }}
-
-      - name: Build & push dxshop-front
-        # 多阶段构建：node 装依赖 + vite build 产出 dist，nginx 托管并反代 /api/*
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.front
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ env.OWNER }}/dxshop-front:latest
-            ghcr.io/${{ env.OWNER }}/dxshop-front:sha-${{ github.sha }}
+      - name: Build & push all images (retry per image)
+        # 用 buildx 直接 build --push，逐镜像重试（最多 3 次）以抗 ghcr.io 抖动。
+        run: |
+          set -e
+          PAIRS="user:Dockerfile.user order:Dockerfile.order goods:Dockerfile.goods chat:Dockerfile.chat front:Dockerfile.front"
+          for p in $PAIRS; do
+            svc="${p%%:*}"; df="${p##*:}"
+            for i in 1 2 3; do
+              if docker buildx build --push --platform linux/amd64 -f "$df" \
+                   -t "ghcr.io/${{ env.OWNER }}/dxshop-$svc:latest" \
+                   -t "ghcr.io/${{ env.OWNER }}/dxshop-$svc:sha-${{ github.sha }}" . ; then
+                echo "pushed dxshop-$svc"; break
+              fi
+              echo "push dxshop-$svc attempt $i failed (ghcr.io flaky?), retrying in 20s..."; sleep 20
+            done
+          done
 
   deploy:
     name: Deploy on self-hosted runner (内网机器，无需公网 IP)
@@ -127,13 +94,15 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Log in to GHCR (拉取私有镜像)
+      - name: Log in to GHCR (拉取私有镜像, retry)
         # runner 本机需登录 GHCR 才能 docker compose pull 私有镜像；用工作流自带 GITHUB_TOKEN，无需额外配置。
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in 1 2 3; do
+            if echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin; then
+              echo "ghcr.io login ok"; break
+            fi
+            echo "ghcr.io login attempt $i failed, retrying in 15s..."; sleep 15
+          done
 
       - name: Sync compose & deploy assets to /opt/dxshop
         # runner 就在目标机上，直接把仓库里的 compose 与 deploy/ 同步到部署目录（无需 scp）。
@@ -149,13 +118,22 @@ jobs:
             exit 1
           fi
 
-      - name: Run via docker compose (按 pull_policy 拉取)
+      - name: Run via docker compose (retry on ghcr.io pull)
         run: |
           set -e
           cd /opt/dxshop
           # 中间件镜像 pull_policy: missing（本地已有则跳过），应用镜像 pull_policy: always（每次拉最新）。
           # 注意：compose pull 命令不遵守 pull_policy，必须用 up 触发按策略拉取。
-          docker compose up -d
+          for i in 1 2 3; do
+            if docker compose up -d; then
+              echo "deploy ok"; break
+            fi
+            echo "docker compose up attempt $i failed (likely ghcr.io pull timeout), retrying in 20s..."; sleep 20
+          done
           docker image prune -f
           echo "===== 部署后容器状态 ====="
           docker compose ps
+
+      - name: Log out from GHCR
+        if: always()
+        run: docker logout ghcr.io
