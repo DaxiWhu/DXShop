@@ -97,6 +97,18 @@ jobs:
             ghcr.io/${{ env.OWNER }}/dxshop-chat:latest
             ghcr.io/${{ env.OWNER }}/dxshop-chat:sha-${{ github.sha }}
 
+      - name: Build & push dxshop-front
+        # 多阶段构建：node 装依赖 + vite build 产出 dist，nginx 托管并反代 /api/*
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.front
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ env.OWNER }}/dxshop-front:latest
+            ghcr.io/${{ env.OWNER }}/dxshop-front:sha-${{ github.sha }}
+
   deploy:
     name: Deploy on self-hosted runner (内网机器，无需公网 IP)
     needs: build-and-push

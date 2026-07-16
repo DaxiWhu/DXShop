@@ -355,6 +355,25 @@ services:
       seata:
         condition: service_healthy
 
+  # 前端：nginx 托管 React 静态产物 + 反代 /api/* 到各后端服务
+  # 镜像由 Dockerfile.front 构建；宿主机 8080 -> 容器 80
+  dxshop-front:
+    image: ghcr.io/${REGISTRY_OWNER:?set REGISTRY_OWNER in .env}/dxshop-front:latest
+    pull_policy: always
+    container_name: dxshop-front
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      dxshop-user:
+        condition: service_started
+      dxshop-order:
+        condition: service_started
+      dxshop-goods:
+        condition: service_started
+      dxshop-chat:
+        condition: service_started
+
 volumes:
   mysql-data:
   redis-data:
