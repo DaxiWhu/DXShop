@@ -1,0 +1,136 @@
+# ============================================================================
+# DXShop-order 配置模板（示例，已提交仓库）
+# 用法：复制本文件为 application.yaml 后按需修改。
+# 所有值均可用环境变量覆盖；容器部署时由 docker-compose 的 .env 注入，
+# 例如 SEATA_CONFIG_NACOS_DATA_ID、SPRING_DATASOURCE_PASSWORD、ALIYUN_OSS_* 等。
+# （application.yaml 含本机密钥，已被 .gitignore 忽略，不入库。）
+# ============================================================================
+server:
+  port: 8083
+spring:
+  jackson:
+    time-zone: Asia/Shanghai
+  application:
+    name: DXShop-order
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://172.17.156.101:3306/dxshop?useSSL=false&rewriteBatchedStatements=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+  cloud:
+    nacos:
+      username: ${SPRING_CLOUD_NACOS_USERNAME:nacos}
+      password: ${SPRING_CLOUD_NACOS_PASSWORD:nacos}
+      config:
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: ${SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR:172.17.156.101:8848}
+        enabled: true
+    loadbalancer:
+      ribbon:
+        enabled: false
+      nacos:
+        enabled: true
+
+# RocketMQ 配置
+RocketMQ:
+  name-server: ${ROCKETMQ_NAME_SERVER:172.17.156.101:9876}
+  producer:
+    group: order-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 2
+    retry-times-when-send-async-failed: 2
+
+# MQ告警配置
+mq:
+  alert:
+    enabled: true  # 是否启用告警
+    dingtalk:
+      webhook: ${DINGTALK_WEBHOOK:}  # 钉钉机器人Webhook地址，从环境变量读取
+
+# Seata 分布式事务配置
+seata:
+  enabled: true
+  # Seata 应用 ID，通常与服务名一致
+  application-id: ${spring.application.name}
+  # 事务服务组名称，需要与 Nacos 配置中的 service.vgroupMapping 对应
+  tx-service-group: my_test_tx_group
+  # 数据源代理模式：AT、XA、TCC
+  data-source-proxy-mode: AT
+  # 是否开启数据源自动代理
+  enable-auto-data-source-proxy: true
+  # 使用 JDK 代理还是 CGLIB 代理
+  use-jdk-proxy: false
+  # 注册中心配置
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${SEATA_REGISTRY_NACOS_SERVER_ADDR:172.17.156.101:8848}
+      namespace: ""
+      group: SEATA_GROUP
+      username: ${SEATA_REGISTRY_NACOS_USERNAME:nacos}
+      password: ${SEATA_REGISTRY_NACOS_PASSWORD:nacos}
+      application: seata-server
+  # 配置中心
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${SEATA_CONFIG_NACOS_SERVER_ADDR:172.17.156.101:8848}
+      namespace: ""
+      group: SEATA_GROUP
+      username: ${SEATA_REGISTRY_NACOS_USERNAME:nacos}
+      password: ${SEATA_REGISTRY_NACOS_PASSWORD:nacos}
+      # 由环境变量注入，与 docker-compose 的 SEATA_CONFIG_NACOS_DATA_ID 对齐
+      data-id: ${SEATA_CONFIG_NACOS_DATA_ID:seataServer.properties}
+  # 事务日志存储配置
+  service:
+    vgroup-mapping:
+      # key 为 tx-service-group 的值，value 为 Seata Server 的 cluster 名称
+      my_test_tx_group: default
+    disable-global-transaction: false
+  # AT 模式配置
+  client:
+    rm:
+      # 一阶段提交超时时间
+      report-success-enable: false
+      # 表元数据刷新模式：auto、manual
+      table-meta-check-enable: true
+      # 异步提交缓冲区限制
+      async-commit-buffer-limit: 1000
+    tm:
+      # 全局事务超时时间（毫秒）
+      default-global-transaction-timeout: 60000
+      # 全局事务提交失败时是否重试
+      commit-retry-count: 5
+      # 全局事务回滚失败时是否重试
+      rollback-retry-count: 5
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.daxi.domain.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志配置说明
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    root: INFO
+    com.daxi: DEBUG
+  file:
+    name: ./logs/DXShop-order.log
+    path: ./logs
+aliyun:
+  oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:oss-cn-wuhan-lr.aliyuncs.com}
+    bucket-name: ${ALIYUN_OSS_BUCKET_NAME:daxi-shop}
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID}
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
+    role-arn: ${ALIYUN_OSS_ROLE_ARN:acs:ram::1157467789361533:role/daxi-shopuploadandquery} # STS角色
+    expire-time: 1800 # 上传凭证过期时间30分钟
+    # 临时URL过期时间（分钟）
+    temp-url-expire: 30
+    allow-suffix: jpg,jpeg,png,webp,gif
+    max-size: 5242880
