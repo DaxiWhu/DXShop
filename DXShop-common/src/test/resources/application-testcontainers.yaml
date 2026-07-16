@@ -4,7 +4,7 @@
 spring:
   # 测试环境不连 Nacos 配置中心：用 optional 声明导入，避免 “No spring.config.import” 启动失败
   config:
-    import: optional:nacos:
+    import: "optional:nacos:"
   data:
     redis:
       # 容器内 Redis 无密码，显式清空以覆盖 main application.yaml 的 123456
