@@ -45,7 +45,12 @@ shardingsphere*.yml
 .env.*
 !.env.example
 
-# —— 本地临时脚本 / AI 记忆 / 前端（按需决定是否纳入版本库）——
+# —— 本地临时脚本 / AI 记忆 ——
 1.sh
 .workbuddy/
-DXShop-Front/
+
+# —— 前端：源码纳入版本库（CI 需 checkout 后构建镜像），仅忽略依赖与构建产物 ——
+DXShop-Front/node_modules
+DXShop-Front/dist
+DXShop-Front/.env.local
+DXShop-Front/.env.*.local
