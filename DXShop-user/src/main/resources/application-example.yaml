@@ -1,0 +1,140 @@
+# ============================================================================
+# DXShop-user 配置模板（示例，已提交仓库）
+# 用法：复制本文件为 application.yaml 后按需修改。
+# 所有值均可用环境变量覆盖；容器部署时由 docker-compose 的 .env 注入，
+# 例如 SEATA_CONFIG_NACOS_DATA_ID、SPRING_DATASOURCE_PASSWORD、ALIYUN_OSS_* 等。
+# （application.yaml 含本机密钥，已被 .gitignore 忽略，不入库。）
+# ============================================================================
+server:
+  port: 8082
+spring:
+  jackson:
+    time-zone: Asia/Shanghai
+  application:
+    name: DXShop-user
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:172.17.156.101}
+      port: ${SPRING_DATA_REDIS_PORT:7001}
+      password: ${SPRING_DATA_REDIS_PASSWORD:123456}
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://172.17.156.101:3306/dxshop?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+  cloud:
+    nacos:
+      username: ${SPRING_CLOUD_NACOS_USERNAME:nacos}
+      password: ${SPRING_CLOUD_NACOS_PASSWORD:nacos}
+      config:
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: ${SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR:172.17.156.101:8848}
+        enabled: true
+    loadbalancer:
+      ribbon:
+        enabled: false
+      nacos:
+        enabled: true
+
+# Seata 分布式事务配置
+seata:
+  enabled: true
+  # Seata 应用 ID，通常与服务名一致
+  application-id: ${spring.application.name}
+  # 事务服务组名称，需要与 Nacos 配置中的 service.vgroupMapping 对应
+  tx-service-group: my_test_tx_group
+  # 数据源代理模式：AT、XA、TCC
+  data-source-proxy-mode: AT
+  # 注册中心配置
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${SEATA_REGISTRY_NACOS_SERVER_ADDR:172.17.156.101:8848}
+      namespace: ""
+      group: SEATA_GROUP
+      username: ${SEATA_REGISTRY_NACOS_USERNAME:nacos}
+      password: ${SEATA_REGISTRY_NACOS_PASSWORD:nacos}
+      application: seata-server
+  # 配置中心
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${SEATA_CONFIG_NACOS_SERVER_ADDR:172.17.156.101:8848}
+      namespace: ""
+      group: SEATA_GROUP
+      username: ${SEATA_REGISTRY_NACOS_USERNAME:nacos}
+      password: ${SEATA_REGISTRY_NACOS_PASSWORD:nacos}
+      # 由环境变量注入，与 docker-compose 的 SEATA_CONFIG_NACOS_DATA_ID 对齐
+      data-id: ${SEATA_CONFIG_NACOS_DATA_ID:seataServer.properties}
+  service:
+    vgroup-mapping:
+      my_test_tx_group: default
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.daxi.domain.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志配置说明
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    root: INFO
+    com.daxi: DEBUG
+  file:
+    name: ./logs/DXShop-user.log
+    path: ./logs
+aliyun:
+  oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:oss-cn-wuhan-lr.aliyuncs.com}
+    bucket-name: ${ALIYUN_OSS_BUCKET_NAME:daxi-shop}
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID}
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
+    role-arn: ${ALIYUN_OSS_ROLE_ARN:acs:ram::1157467789361533:role/daxi-shopuploadandquery} # STS角色
+    expire-time: 1800 # 上传凭证过期时间30分钟
+    # 临时URL过期时间（分钟）
+    temp-url-expire: 30
+    allow-suffix: jpg,jpeg,png,webp,gif
+    max-size: 5242880
+
+# XXL-JOB 核心配置
+xxl:
+  job:
+    # 调度中心地址配置
+    admin:
+      # xxl-job admin address list, such as "http://address" or "http://address01,http://address02"
+      addresses: ${XXL_JOB_ADMIN_ADDRESSES:http://127.0.0.1:8090/xxl-job-admin}
+      # xxl-job access token
+      accessToken: default_token
+      # xxl-job timeout by second, default 3s
+      timeout: 3
+
+    # 执行器配置
+    executor:
+      # xxl-job executor enable, default true
+      enabled: true
+      # xxl-job executor appname
+      appname: xxl-job-executor-sample
+      # xxl-job executor registry-address: default use address to registry , otherwise use ip:port if address is null
+      address: ''
+      # xxl-job executor server-info
+      ip: ''
+      port: 9999
+      # xxl-job executor log-path
+      logpath: /data/applogs/xxl-job/jobhandler
+      # xxl-job executor log-retention-days
+      logretentiondays: 30
+      # xxl-job executor excluded package, will skip scan job. such as "org.package01" or "org.package01,org.package02"
+      excludedpackage: ''
