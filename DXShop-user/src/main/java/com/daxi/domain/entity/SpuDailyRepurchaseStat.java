@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("shop_daily_repurchase_stat")
+@TableName("spu_daily_repurchase_stat")
 public class SpuDailyRepurchaseStat{
 
     /**
