@@ -1,9 +1,0 @@
-# DXShop-chat 服务镜像
-# 运行时配置(数据源 / Nacos / Redis 等)通过环境变量注入,不 bake 进镜像。
-FROM eclipse-temurin:25-jre
-
-WORKDIR /app
-COPY DXShop-chat/target/DXShop-chat-0.0.1-SNAPSHOT.jar app.jar
-
-EXPOSE 8085
-ENTRYPOINT ["java", "-jar", "app.jar"]
